@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Professional portfolio of Martin Seidel, Audio Software Developer and VR Engineer, specializing in JUCE Plugins and Unity VR experiences. Done in a premium modern Frutiger Aero design theme.">
+    <title>Martin Seidel | Creative Technologist & Audio/VR Developer</title>
+    
+    <!-- Google Fonts: Outfit (rounded and modern) & Syne (expressive headings) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome for icons (using CDN) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Logon Password Screen Overlay (Windows Glass style) -->
+    <div id="logon-screen" class="logon-screen" role="dialog" aria-modal="true">
+        <div class="logon-card">
+            <div class="logon-avatar-glow">
+                <div class="logon-avatar" aria-label="Martin Seidel Avatar">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+            </div>
+            <h2 class="logon-user">Martin Seidel</h2>
+            <p class="logon-subtitle">Secure Access Portal</p>
+            <form id="logon-form" autocomplete="off">
+                <div class="logon-input-wrapper">
+                    <input type="password" id="logon-password" placeholder="Password (try: aero2026)" required autofocus>
+                    <button type="submit" class="logon-submit-btn" aria-label="Submit Password">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+                <div class="logon-error-msg" id="logon-error">Incorrect password. Please try again.</div>
+            </form>
+            <div class="logon-hint">System Protected // Creative Portfolio</div>
+        </div>
+    </div>
+
+    <!-- Background Elements -->
+    <div class="aurora-container" id="aurora-bg">
+        <div class="aurora-blob aurora-blue"></div>
+        <div class="aurora-blob aurora-green"></div>
+        <div class="aurora-blob aurora-cyan"></div>
+    </div>
+    
+    <!-- Interactive Aero Bubble Canvas -->
+    <canvas id="bubble-canvas" aria-hidden="true"></canvas>
+
+    <!-- Main Navigation Header -->
+    <header class="glass-header" id="main-header">
+        <div class="header-container">
+            <a href="#welcome" class="logo" id="logo-link">
+                <span class="logo-icon"><i class="fa-solid fa-droplet"></i></span>
+                <span class="logo-text">SEIDEL<span class="logo-accent">.AERO</span></span>
+            </a>
+            <nav class="nav-menu" id="navigation-menu">
+                <button class="nav-btn active" data-target="welcome" id="nav-welcome" aria-label="Navigate to Welcome">
+                    <i class="fa-solid fa-house"></i> Overview
+                </button>
+                <button class="nav-btn" data-target="projects" id="nav-projects" aria-label="Navigate to Projects">
+                    <i class="fa-solid fa-cubes"></i> Projects
+                </button>
+                <button class="nav-btn" data-target="about" id="nav-about" aria-label="Navigate to About Me">
+                    <i class="fa-solid fa-address-card"></i> About Me
+                </button>
+            </nav>
+            <!-- Navigation buttons -->
+        </div>
+    </header>
+
+    <main class="content-container">
+        <!-- SECTION 1: WELCOME & OVERVIEW -->
+        <section id="welcome" class="content-section active" aria-labelledby="welcome-title">
+            <div class="welcome-hero">
+                <div class="hero-text">
+                    <span class="hero-eyebrow"><i class="fa-solid fa-wave-square"></i> CREATIVE TECHNOLOGIST</span>
+                    <h1 id="welcome-title" class="hero-title">Crafting the Future of Sound & Space</h1>
+                    <p class="hero-subtitle">I develop high-performance C++ JUCE audio plugins and immersive VR experiences in Unity. Merging natural interactions with rich digital soundscapes.</p>
+                    <div class="hero-buttons">
+                        <button class="cta-btn primary-btn" onclick="document.getElementById('nav-projects').click()" id="cta-view-projects">
+                            Explore Projects <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                        <button class="cta-btn secondary-btn" onclick="document.getElementById('nav-about').click()" id="cta-learn-more">
+                            About Me
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Desktop Sidebar Widgets (Aero Sidebar style) -->
+                <div class="aero-sidebar">
+                    <!-- Widget 1: Working Analog Clock -->
+                    <div class="aero-widget clock-widget" id="widget-clock" title="Local System Time">
+                        <div class="clock-face">
+                            <div class="hand hour-hand" id="clock-hour"></div>
+                            <div class="hand minute-hand" id="clock-minute"></div>
+                            <div class="hand second-hand" id="clock-second"></div>
+                            <div class="clock-center"></div>
+                        </div>
+                        <div class="widget-label">Aero Time</div>
+                    </div>
+                    
+                    <!-- Widget 2: CPU & MEM monitors -->
+                    <div class="aero-widget monitor-widget" id="widget-performance" title="Synthesizer Processor Load">
+                        <div class="monitor-circles">
+                            <div class="progress-ring-container">
+                                <svg class="progress-ring" width="80" height="80">
+                                    <circle class="progress-ring-bg" stroke="rgba(255,255,255,0.2)" stroke-width="6" fill="transparent" r="30" cx="40" cy="40"/>
+                                    <circle class="progress-ring-circle" id="cpu-ring" stroke="var(--aero-blue)" stroke-width="6" stroke-linecap="round" fill="transparent" r="30" cx="40" cy="40" stroke-dasharray="188.4" stroke-dashoffset="188.4"/>
+                                </svg>
+                                <span class="ring-value" id="cpu-value">0%</span>
+                                <span class="ring-label">DSP Load</span>
+                            </div>
+                            <div class="progress-ring-container">
+                                <svg class="progress-ring" width="80" height="80">
+                                    <circle class="progress-ring-bg" stroke="rgba(255,255,255,0.2)" stroke-width="6" fill="transparent" r="30" cx="40" cy="40"/>
+                                    <circle class="progress-ring-circle" id="mem-ring" stroke="var(--aero-green)" stroke-width="6" stroke-linecap="round" fill="transparent" r="30" cx="40" cy="40" stroke-dasharray="188.4" stroke-dashoffset="188.4"/>
+                                </svg>
+                                <span class="ring-value" id="mem-value">0%</span>
+                                <span class="ring-label">Buffer</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Widget 3: Status / System Info -->
+                    <div class="aero-widget status-widget" id="widget-status">
+                        <div class="status-indicator online">
+                            <span class="status-dot"></span>
+                            <span class="status-txt">System Online</span>
+                        </div>
+                        <p class="status-details">Check out the project showcase videos and source files available for download on the Projects tab!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: DISPLAYED PROJECTS -->
+        <section id="projects" class="content-section" aria-labelledby="projects-title">
+            <p class="section-subtitle">A showcase of my recent audio engineering and virtual reality projects.</p>
+            
+            <div class="projects-grid">
+                
+                <!-- Project 1: JUCE Audio Plugin -->
+                <div class="project-card glass-card" id="card-juce-plugin">
+                    <div class="project-badge"><i class="fa-solid fa-guitar"></i> Audio FX & Synth</div>
+                    <h3 class="project-card-title">AeroSynth JUCE Plugin</h3>
+                    <p class="project-card-desc">A subtractive dual-oscillator synthesizer plugin written in C++ using the JUCE framework, designed with a custom hardware-accelerated Vector GUI skin.</p>
+                    
+                    <!-- Project Media Showcase -->
+                    <div class="project-media-container">
+                        <video class="project-media" controls poster="assets/juce_plugin_poster.png" aria-label="AeroSynth JUCE Synthesizer plugin showcase video">
+                            <source src="assets/juce_plugin_demo.mp4" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                    
+                    <!-- Tech specs & Download -->
+                    <div class="project-footer">
+                        <div class="tech-tags">
+                            <span class="tag">C++</span>
+                            <span class="tag">JUCE</span>
+                            <span class="tag">DSP</span>
+                            <span class="tag">VST3/AU</span>
+                        </div>
+                        <a href="downloads/JUCE_Plugin_v1.0.0_Demo.zip" class="download-btn" id="download-juce-plugin" download>
+                            <i class="fa-solid fa-download"></i> Download PLUGIN (Demo)
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Project 2: VR MIDI Visualizer -->
+                <div class="project-card glass-card" id="card-vr-midi">
+                    <div class="project-badge"><i class="fa-solid fa-vr-cardboard"></i> Unity VR</div>
+                    <h3 class="project-card-title">VR MIDI Visualizer</h3>
+                    <p class="project-card-desc">An immersive Virtual Reality environment where standard MIDI inputs map to physical physics-based graphics, rendering glowing orb particles that interact with sound waves.</p>
+                    
+                    <!-- Project Media Showcase -->
+                    <div class="project-media-container">
+                        <video class="project-media" controls poster="assets/vr_midi_poster.png" aria-label="VR MIDI Visualizer showcase video">
+                            <source src="assets/vr_midi_visualizer_demo.mp4" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                    
+                    <!-- Tech specs & Download -->
+                    <div class="project-footer">
+                        <div class="tech-tags">
+                            <span class="tag">Unity</span>
+                            <span class="tag">C#</span>
+                            <span class="tag">XR Interaction</span>
+                            <span class="tag">Midi Device API</span>
+                        </div>
+                        <a href="downloads/VR_MIDI_Visualizer_Unity.zip" class="download-btn" id="download-unity-project" download>
+                            <i class="fa-solid fa-folder-open"></i> Download Unity Project
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: ABOUT ME -->
+        <section id="about" class="content-section" aria-labelledby="about-title">
+            <h2 id="about-title" class="section-title">About Me</h2>
+            <p class="section-subtitle">Engineering high-fidelity interactions at the intersection of sight and sound.</p>
+            
+            <div class="about-grid">
+                <!-- Personal profile glass panel -->
+                <div class="about-profile glass-card">
+                    <div class="profile-header">
+                        <!-- Custom CSS glossy bubble avatar instead of placeholder -->
+                        <div class="aero-avatar" aria-label="Decorative profile avatar">
+                            <div class="avatar-shimmer"></div>
+                            <i class="fa-solid fa-user-tie"></i>
+                        </div>
+                        <div class="profile-title-group">
+                            <h3 class="profile-name">Martin Seidel</h3>
+                            <span class="profile-title">Audio & Immersive Tech Engineer</span>
+                        </div>
+                    </div>
+                    
+                    <div class="profile-bio">
+                        <p>I am a master's student in Creative Technologies and Audio Engineering. My technical work spans writing custom real-time digital signal processing algorithms (DSP) in C++ and building responsive, physical human-computer interaction models in Virtual Reality.</p>
+                        <p>Driven by the optimistic digital realism of the early web (Frutiger Aero), I design systems that feel organic, glossy, responsive, and visually tactile, while maintaining professional standards of clean code, automated builds, and hardware optimization.</p>
+                    </div>
+                    
+                    <div class="profile-socials">
+                        <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="social-link" title="Github Profile"><i class="fa-brands fa-github"></i></a>
+                        <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="social-link" title="LinkedIn Profile"><i class="fa-brands fa-linkedin"></i></a>
+                        <a href="mailto:mpseidel@example.com" class="social-link" title="Send Email"><i class="fa-solid fa-envelope"></i></a>
+                    </div>
+                </div>
+
+                <!-- Skill detail cards & Contact form -->
+                <div class="about-interactive">
+                    <!-- Skills Glass Panel -->
+                    <div class="skills-card glass-card">
+                        <h4>Expertise Profile</h4>
+                        <div class="skill-meter-group">
+                            <div class="skill-item">
+                                <div class="skill-info">
+                                    <span>C++ / DSP Engineering (JUCE)</span>
+                                    <span>92%</span>
+                                </div>
+                                <div class="skill-bar-container">
+                                    <div class="skill-bar-fill" style="width: 92%; background: linear-gradient(90deg, var(--aero-blue), var(--aero-cyan));"></div>
+                                </div>
+                            </div>
+                            <div class="skill-item">
+                                <div class="skill-info">
+                                    <span>Unity VR & C# Interaction Tech</span>
+                                    <span>88%</span>
+                                </div>
+                                <div class="skill-bar-container">
+                                    <div class="skill-bar-fill" style="width: 88%; background: linear-gradient(90deg, var(--aero-cyan), var(--aero-green));"></div>
+                                </div>
+                            </div>
+                            <div class="skill-item">
+                                <div class="skill-info">
+                                    <span>Web Audio / Front-End Interaction</span>
+                                    <span>80%</span>
+                                </div>
+                                <div class="skill-bar-container">
+                                    <div class="skill-bar-fill" style="width: 80%; background: linear-gradient(90deg, var(--aero-green), var(--aero-yellow));"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Form Glass Panel -->
+                    <div class="contact-card glass-card">
+                        <h4>Send Message</h4>
+                        <form id="contact-form" novalidate>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="contact-name">Name</label>
+                                    <input type="text" id="contact-name" name="name" required placeholder="Your name">
+                                    <span class="error-msg" id="name-error">Name is required</span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="contact-email">Email</label>
+                                    <input type="email" id="contact-email" name="email" required placeholder="name@domain.com">
+                                    <span class="error-msg" id="email-error">Please enter a valid email</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="contact-message">Message</label>
+                                <textarea id="contact-message" name="message" rows="4" required placeholder="Let's connect about a project..."></textarea>
+                                <span class="error-msg" id="message-error">Message must be at least 10 characters</span>
+                            </div>
+                            <button type="submit" class="submit-btn" id="btn-submit-contact">
+                                <span>Send Message</span> <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Success Modal Popup (Windows Glass dialog box style) -->
+    <div class="modal-backdrop" id="contact-success-modal" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="aero-dialog-box">
+            <div class="dialog-header">
+                <span class="dialog-title"><i class="fa-solid fa-circle-check"></i> System Notification</span>
+                <button class="dialog-close-btn" id="modal-close-icon" aria-label="Close message feedback dialog">&times;</button>
+            </div>
+            <div class="dialog-body">
+                <div class="dialog-icon"><i class="fa-solid fa-envelope-circle-check"></i></div>
+                <div class="dialog-text">
+                    <h5>Message Transmitted!</h5>
+                    <p>Your message has been processed. Martin will get back to you shortly.</p>
+                </div>
+            </div>
+            <div class="dialog-footer">
+                <button class="dialog-btn" id="modal-close-btn">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="glass-footer">
+        <div class="footer-content">
+            <p>&copy; 2026 Martin Seidel. All rights reserved. Designed with Aero optimism.</p>
+            <div class="footer-links">
+                <a href="#welcome">Overview</a>
+                <a href="#projects">Projects</a>
+                <a href="#about">About Me</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- App JavaScript Logic -->
+    <script src="app.js"></script>
+</body>
+</html>
