@@ -6,15 +6,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Logon screen lock
     initLogonScreen();
 
-    // Navigation routing, widgets, canvases
+    // Navigation routing, canvases
     initNavigation();
-    initWidgets();
     initBackgroundCanvas();
     
-    // Audio synthesis engine & visualizers
-    initAudioEngine();
-    initMidiVisualizer();
-    
+
     // Form and modals
     initContactForm();
 });
@@ -24,31 +20,19 @@ document.addEventListener('DOMContentLoaded', () => {
    ========================================================================== */
 function initNavigation() {
     const navButtons = document.querySelectorAll('.nav-btn');
-    const sections = document.querySelectorAll('.content-section');
     
     navButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const targetId = btn.getAttribute('data-target');
+            const targetSection = document.getElementById(targetId);
+            
+            if (targetSection) {
+                targetSection.scrollIntoView({ behavior: 'smooth' });
+            }
             
             // Update active button
             navButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            
-            // Transition sections
-            sections.forEach(section => {
-                if (section.id === targetId) {
-                    section.classList.add('active');
-                    // Trigger reflow for transition
-                    section.style.opacity = '0';
-                    section.style.transform = 'translateY(15px)';
-                    setTimeout(() => {
-                        section.style.opacity = '1';
-                        section.style.transform = 'translateY(0)';
-                    }, 50);
-                } else {
-                    section.classList.remove('active');
-                }
-            });
             
             // Adjust header style based on section
             const header = document.getElementById('main-header');
@@ -68,71 +52,53 @@ function initNavigation() {
         const matchingBtn = document.querySelector(`.nav-btn[data-target="${hash}"]`);
         if (matchingBtn) matchingBtn.click();
     }
+    
+    // Update active nav button based on scroll position
+    let lastScrollY = window.scrollY;
+    
+    window.addEventListener('scroll', () => {
+        const currentScrollY = window.scrollY;
+        const header = document.getElementById('main-header');
+        
+        // Hide top bar when scrolling down, show when scrolling up
+        if (currentScrollY > lastScrollY && currentScrollY > 100) {
+            header.classList.add('header-hidden');
+        } else {
+            header.classList.remove('header-hidden');
+        }
+        lastScrollY = currentScrollY;
+        
+        const sections = document.querySelectorAll('.content-section');
+        let current = '';
+        
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            if (window.scrollY >= sectionTop - 150) {
+                current = section.getAttribute('id');
+            }
+        });
+        
+        if (current) {
+            navButtons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-target') === current) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            const header = document.getElementById('main-header');
+            if (current !== 'welcome') {
+                header.style.width = '95%';
+                header.style.top = '10px';
+            } else {
+                header.style.width = '90%';
+                header.style.top = '15px';
+            }
+        }
+    });
 }
 
-/* ==========================================================================
-   DESKTOP WIDGETS
-   ========================================================================== */
-function initWidgets() {
-    // 1. Working Analog Clock
-    const hourHand = document.getElementById('clock-hour');
-    const minuteHand = document.getElementById('clock-minute');
-    const secondHand = document.getElementById('clock-second');
-    
-    function updateClock() {
-        const now = new Date();
-        const hr = now.getHours();
-        const min = now.getMinutes();
-        const sec = now.getSeconds();
-        const ms = now.getMilliseconds();
-        
-        // Use smooth transitions for hands
-        const hrDeg = ((hr % 12) * 30) + (min * 0.5);
-        const minDeg = (min * 6) + (sec * 0.1);
-        const secDeg = (sec * 6) + (ms * 0.006); // Smooth sweep seconds
-        
-        hourHand.style.transform = `rotate(${hrDeg}deg)`;
-        minuteHand.style.transform = `rotate(${minDeg}deg)`;
-        secondHand.style.transform = `rotate(${secDeg}deg)`;
-    }
-    
-    setInterval(updateClock, 30);
-    updateClock();
 
-    // 2. CPU & Memory fluctuations
-    const cpuRing = document.getElementById('cpu-ring');
-    const memRing = document.getElementById('mem-ring');
-    const cpuValueText = document.getElementById('cpu-value');
-    const memValueText = document.getElementById('mem-value');
-    
-    const maxOffset = 188.4; // 2 * PI * r (r=30)
-    let currentCpu = 15;
-    let currentMem = 35;
-    
-    function updateProgressRing(ring, percent) {
-        const offset = maxOffset - (percent / 100) * maxOffset;
-        ring.style.strokeDashoffset = offset;
-    }
-    
-    function simulateMetrics() {
-        // Base fluctuation
-        const targetCpu = Math.floor(10 + Math.random() * 25);
-        const targetMem = Math.floor(30 + Math.random() * 10);
-        
-        // Interpolate slowly
-        currentCpu += (targetCpu - currentCpu) * 0.15;
-        currentMem += (targetMem - currentMem) * 0.15;
-        
-        cpuValueText.textContent = `${Math.round(currentCpu)}%`;
-        memValueText.textContent = `${Math.round(currentMem)}%`;
-        
-        updateProgressRing(cpuRing, currentCpu);
-        updateProgressRing(memRing, currentMem);
-    }
-    
-    setInterval(simulateMetrics, 1000);
-    simulateMetrics();
-}
 
 /* ==========================================================================
    BACKGROUND FLOATING AERO BUBBLE CANVAS
@@ -326,596 +292,6 @@ function initBackgroundCanvas() {
 }
 
 /* ==========================================================================
-   WEB AUDIO ENGINE & JUCE PLUGIN SIMULATOR
-   ========================================================================== */
-let audioCtx = null;
-let synthEngine = {
-    osc: null,
-    filter: null,
-    gainNode: null,
-    analyser: null,
-    poweredOn: false,
-    freq: 440,
-    cutoff: 2000,
-    resonance: 5,
-    volume: 0.7,
-    waveType: 'sine'
-};
-
-function initAudioEngine() {
-    const soundToggle = document.getElementById('sound-toggle');
-    const powerBtn = document.getElementById('synth-power-toggle');
-    
-    // Guard: skip if interactive elements are removed from page
-    if (!soundToggle || !powerBtn) return;
-    
-    // UI elements to update values
-    const freqVal = document.getElementById('val-pitch');
-    const cutoffVal = document.getElementById('val-cutoff');
-    const resVal = document.getElementById('val-resonance');
-    const volVal = document.getElementById('val-volume');
-    
-    // Bind click/toggle listeners
-    soundToggle.addEventListener('click', () => {
-        toggleGlobalSound();
-    });
-    
-    powerBtn.addEventListener('click', () => {
-        if (!audioCtx) {
-            // Lazy load audio context on user click
-            setupAudioNodes();
-        }
-        
-        synthEngine.poweredOn = !synthEngine.poweredOn;
-        if (synthEngine.poweredOn) {
-            powerBtn.classList.add('active');
-            soundToggle.classList.add('audio-on');
-            soundToggle.innerHTML = '<i class="fa-solid fa-volume-high"></i> Sound Engine: On';
-            
-            // Resume Audio Context if suspended
-            if (audioCtx && audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-            
-            // Set up active nodes
-            startSynthSynth();
-        } else {
-            powerBtn.classList.remove('active');
-            stopSynthSynth();
-        }
-    });
-
-    function toggleGlobalSound() {
-        powerBtn.click();
-    }
-    
-    function setupAudioNodes() {
-        try {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            
-            synthEngine.analyser = audioCtx.createAnalyser();
-            synthEngine.analyser.fftSize = 256;
-            
-            synthEngine.filter = audioCtx.createBiquadFilter();
-            synthEngine.filter.type = 'lowpass';
-            
-            synthEngine.gainNode = audioCtx.createGain();
-            
-            // Connections: Synth -> Filter -> Gain -> Analyser -> Output
-            synthEngine.filter.connect(synthEngine.gainNode);
-            synthEngine.gainNode.connect(synthEngine.analyser);
-            synthEngine.analyser.connect(audioCtx.destination);
-        } catch (e) {
-            console.error('Web Audio API not supported in browser:', e);
-        }
-    }
-    
-    function startSynthSynth() {
-        if (!audioCtx) return;
-        
-        if (synthEngine.osc) {
-            try { synthEngine.osc.stop(); } catch(e){}
-        }
-        
-        synthEngine.osc = audioCtx.createOscillator();
-        synthEngine.osc.type = synthEngine.waveType;
-        synthEngine.osc.frequency.setValueAtTime(synthEngine.freq, audioCtx.currentTime);
-        
-        synthEngine.filter.frequency.setValueAtTime(synthEngine.cutoff, audioCtx.currentTime);
-        synthEngine.filter.Q.setValueAtTime(synthEngine.resonance, audioCtx.currentTime);
-        
-        // Synthesizer Gain
-        synthEngine.gainNode.gain.setValueAtTime(synthEngine.volume, audioCtx.currentTime);
-        
-        synthEngine.osc.connect(synthEngine.filter);
-        synthEngine.osc.start();
-        
-        // Visual indicator on Status widget
-        document.getElementById('widget-status').querySelector('.status-indicator').className = 'status-indicator online';
-        document.getElementById('widget-status').querySelector('.status-txt').textContent = 'DSP ACTIVE';
-    }
-    
-    function stopSynthSynth() {
-        if (synthEngine.osc) {
-            try {
-                synthEngine.osc.stop();
-                synthEngine.osc.disconnect();
-            } catch (e) {}
-            synthEngine.osc = null;
-        }
-        
-        // Reset status widget
-        document.getElementById('widget-status').querySelector('.status-indicator').className = 'status-indicator offline';
-        document.getElementById('widget-status').querySelector('.status-txt').textContent = 'DSP Offline';
-    }
-    
-    // Waveform switcher listeners
-    const waveBtns = document.querySelectorAll('.vst-wave-btn');
-    waveBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            waveBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            
-            synthEngine.waveType = btn.getAttribute('data-type');
-            if (synthEngine.osc && synthEngine.poweredOn) {
-                synthEngine.osc.type = synthEngine.waveType;
-            }
-        });
-    });
-    
-    /* ==========================================================================
-       VST KNOB DRAGGING INTERACTION
-       ========================================================================== */
-    const knobs = document.querySelectorAll('.vst-knob');
-    knobs.forEach(knob => {
-        let startY = 0;
-        let startVal = 0;
-        const min = parseFloat(knob.getAttribute('data-min'));
-        const max = parseFloat(knob.getAttribute('data-max'));
-        const range = max - min;
-        
-        // Calculate initial rotation based on data-value
-        let currentVal = parseFloat(knob.getAttribute('data-value'));
-        let rotationDegrees = ((currentVal - min) / range) * 270 - 135; // Map to -135deg to +135deg
-        knob.querySelector('.knob-indicator').style.transform = `translateX(-50%) rotate(${rotationDegrees}deg)`;
-        
-        // Drag listener
-        knob.addEventListener('mousedown', (e) => {
-            startY = e.clientY;
-            startVal = parseFloat(knob.getAttribute('data-value'));
-            
-            document.addEventListener('mousemove', onMouseMove);
-            document.addEventListener('mouseup', onMouseUp);
-            e.preventDefault();
-        });
-        
-        // Touch support
-        knob.addEventListener('touchstart', (e) => {
-            startY = e.touches[0].clientY;
-            startVal = parseFloat(knob.getAttribute('data-value'));
-            
-            document.addEventListener('touchmove', onTouchMove, { passive: false });
-            document.addEventListener('touchend', onTouchEnd);
-            e.preventDefault();
-        });
-        
-        // Scroll support
-        knob.addEventListener('wheel', (e) => {
-            const step = range * 0.05; // 5% scroll step
-            const currentVal = parseFloat(knob.getAttribute('data-value'));
-            let newVal = currentVal + (e.deltaY < 0 ? step : -step);
-            newVal = Math.max(min, Math.min(max, newVal));
-            
-            updateKnobValue(knob, newVal, min, max, range);
-            e.preventDefault();
-        }, { passive: false });
-        
-        function onMouseMove(e) {
-            const deltaY = startY - e.clientY; // drag up increases value
-            const speed = range / 200; // sensitivity divisor
-            let newVal = startVal + deltaY * speed;
-            newVal = Math.max(min, Math.min(max, newVal));
-            
-            updateKnobValue(knob, newVal, min, max, range);
-        }
-        
-        function onTouchMove(e) {
-            const deltaY = startY - e.touches[0].clientY;
-            const speed = range / 200;
-            let newVal = startVal + deltaY * speed;
-            newVal = Math.max(min, Math.min(max, newVal));
-            
-            updateKnobValue(knob, newVal, min, max, range);
-            e.preventDefault();
-        }
-        
-        function onMouseUp() {
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
-        }
-        
-        function onTouchEnd() {
-            document.removeEventListener('touchmove', onTouchMove);
-            document.removeEventListener('touchend', onTouchEnd);
-        }
-    });
-    
-    function updateKnobValue(knob, value, min, max, range) {
-        // Format value representation
-        let displayVal = Math.round(value);
-        if (knob.id === 'knob-volume') {
-            displayVal = Math.round(value);
-            synthEngine.volume = value / 100;
-            if (synthEngine.gainNode && synthEngine.poweredOn) {
-                synthEngine.gainNode.gain.setValueAtTime(synthEngine.volume, audioCtx.currentTime);
-            }
-            volVal.textContent = displayVal;
-        } else if (knob.id === 'knob-pitch') {
-            synthEngine.freq = value;
-            if (synthEngine.osc && synthEngine.poweredOn) {
-                synthEngine.osc.frequency.setValueAtTime(value, audioCtx.currentTime);
-            }
-            freqVal.textContent = displayVal;
-        } else if (knob.id === 'knob-cutoff') {
-            synthEngine.cutoff = value;
-            if (synthEngine.filter && synthEngine.poweredOn) {
-                synthEngine.filter.frequency.setValueAtTime(value, audioCtx.currentTime);
-            }
-            cutoffVal.textContent = displayVal;
-        } else if (knob.id === 'knob-resonance') {
-            displayVal = (value).toFixed(1);
-            synthEngine.resonance = value;
-            if (synthEngine.filter && synthEngine.poweredOn) {
-                synthEngine.filter.Q.setValueAtTime(value, audioCtx.currentTime);
-            }
-            resVal.textContent = displayVal;
-        }
-        
-        // Save back attribute
-        knob.setAttribute('data-value', value);
-        
-        // Rotate indicator
-        const rotationDegrees = ((value - min) / range) * 270 - 135;
-        knob.querySelector('.knob-indicator').style.transform = `translateX(-50%) rotate(${rotationDegrees}deg)`;
-    }
-    
-    /* ==========================================================================
-       SYNTH OSCILLOSCOPE DRAWING
-       ========================================================================== */
-    const oscCanvas = document.getElementById('synth-oscilloscope');
-    const oscCtx = oscCanvas.getContext('2d');
-    const dataArray = new Uint8Array(128);
-    
-    function drawOscilloscope() {
-        const width = oscCanvas.width;
-        const height = oscCanvas.height;
-        
-        requestAnimationFrame(drawOscilloscope);
-        
-        oscCtx.fillStyle = '#020617';
-        oscCtx.fillRect(0, 0, width, height);
-        
-        // Draw grid lines
-        oscCtx.strokeStyle = 'rgba(51, 65, 85, 0.25)';
-        oscCtx.lineWidth = 1;
-        oscCtx.beginPath();
-        // center line
-        oscCtx.moveTo(0, height / 2); oscCtx.lineTo(width, height / 2);
-        // subdivisions
-        for (let i = 1; i < 4; i++) {
-            const x = (width / 4) * i;
-            oscCtx.moveTo(x, 0); oscCtx.lineTo(x, height);
-        }
-        oscCtx.stroke();
-        
-        // Fetch wave data
-        if (synthEngine.poweredOn && audioCtx && synthEngine.analyser) {
-            synthEngine.analyser.getByteTimeDomainData(dataArray);
-            
-            oscCtx.strokeStyle = '#00f2fe';
-            oscCtx.lineWidth = 2.5;
-            oscCtx.shadowColor = 'rgba(0, 242, 254, 0.7)';
-            oscCtx.shadowBlur = 6;
-            
-            oscCtx.beginPath();
-            const sliceWidth = width / dataArray.length;
-            let x = 0;
-            
-            for (let i = 0; i < dataArray.length; i++) {
-                const v = dataArray[i] / 128.0;
-                const y = v * (height / 2);
-                
-                if (i === 0) {
-                    oscCtx.moveTo(x, y);
-                } else {
-                    oscCtx.lineTo(x, y);
-                }
-                
-                x += sliceWidth;
-            }
-            
-            oscCtx.lineTo(width, height / 2);
-            oscCtx.stroke();
-            oscCtx.shadowBlur = 0; // Reset shadow
-        } else {
-            // Synthesizer is powered off -> Draw quiet idle noise wave
-            oscCtx.strokeStyle = 'rgba(0, 188, 255, 0.35)';
-            oscCtx.lineWidth = 1.5;
-            
-            oscCtx.beginPath();
-            const time = Date.now() * 0.004;
-            for (let x = 0; x < width; x++) {
-                // Simulate soft combined sine noise
-                const y = (height / 2) + Math.sin(x * 0.04 + time) * 3 * Math.cos(x * 0.01 + time * 0.5);
-                if (x === 0) oscCtx.moveTo(x, y);
-                else oscCtx.lineTo(x, y);
-            }
-            oscCtx.stroke();
-        }
-    }
-    
-    drawOscilloscope();
-}
-
-/* ==========================================================================
-   VR MIDI SIMULATOR & KEYBOARD
-   ========================================================================== */
-function initMidiVisualizer() {
-    const vrCanvas = document.getElementById('vr-midi-canvas');
-    
-    // Guard: skip if visualizer canvas is removed from page
-    if (!vrCanvas) return;
-
-    const vrCtx = vrCanvas.getContext('2d');
-    const keys = document.querySelectorAll('.piano-key');
-    const indicator = document.getElementById('midi-input-indicator');
-    
-    let width = vrCanvas.width = vrCanvas.offsetWidth;
-    let height = vrCanvas.height = vrCanvas.offsetHeight;
-    
-    const spawnedBubbles = [];
-    
-    // Resize support
-    window.addEventListener('resize', () => {
-        width = vrCanvas.width = vrCanvas.offsetWidth;
-        height = vrCanvas.height = vrCanvas.offsetHeight;
-    });
-    
-    // Note synthesizer helper (secondary audio context for piano trigger)
-    let midiSynthCtx = null;
-    function playMidiNoteTone(freq) {
-        if (!audioCtx || audioCtx.state === 'suspended') return; // Only play if global Sound Engine is enabled
-        
-        try {
-            const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            const filter = audioCtx.createBiquadFilter();
-            
-            // Dynamic envelope
-            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0.35, audioCtx.currentTime + 0.03); // Attack
-            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2); // Decay/Release
-            
-            filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(1200, audioCtx.currentTime);
-            filter.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.8);
-            
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            
-            osc.connect(filter);
-            filter.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
-            osc.start();
-            osc.stop(audioCtx.currentTime + 1.3);
-        } catch(e) {
-            console.error('MIDI Synth play error:', e);
-        }
-    }
-    
-    class MidiVisualParticle {
-        constructor(pitch, noteName) {
-            this.noteName = noteName;
-            this.r = Math.random() * 8 + 4;
-            
-            // Map pitch note (60 to 72) to horizontal viewport coordinate
-            const step = width / 14;
-            this.x = step * (pitch - 59) + (Math.random() * 10 - 5);
-            this.y = height + this.r;
-            
-            // Launch particle upwards with perspective scale
-            this.vy = -(Math.random() * 2 + 1);
-            this.vx = (Math.random() * 0.4 - 0.2);
-            
-            this.scale = 0.5;
-            this.alpha = 1.0;
-            this.maxLife = Math.random() * 50 + 80;
-            this.life = this.maxLife;
-            
-            // Set note color gradient
-            const colorPalette = {
-                'C': '#00bcff', // blue
-                'C#': '#00f2fe',
-                'D': '#0ea5e9',
-                'D#': '#0284c7',
-                'E': '#76b900', // green
-                'F': '#a3e635',
-                'F#': '#84cc16',
-                'G': '#facc15', // yellow
-                'G#': '#fbbf24',
-                'A': '#f59e0b',
-                'A#': '#ea580c', // orange
-                'B': '#ff6a00'
-            };
-            this.color = colorPalette[noteName] || '#fff';
-        }
-        
-        update() {
-            this.y += this.vy;
-            this.x += this.vx;
-            
-            // Particle expands and fades as it rises (3D projection simulation)
-            this.scale += 0.008;
-            this.life--;
-            this.alpha = this.life / this.maxLife;
-            
-            return this.life > 0;
-        }
-        
-        draw() {
-            const currentRadius = this.r * this.scale;
-            
-            // Particle glow aura
-            vrCtx.shadowColor = this.color;
-            vrCtx.shadowBlur = 12 * this.scale;
-            
-            // Sphere linear gradient
-            const grad = vrCtx.createRadialGradient(
-                this.x - currentRadius * 0.3, this.y - currentRadius * 0.3, currentRadius * 0.1,
-                this.x, this.y, currentRadius
-            );
-            grad.addColorStop(0, '#ffffff');
-            grad.addColorStop(0.3, this.color);
-            grad.addColorStop(1, 'rgba(0,0,0,0.8)');
-            
-            vrCtx.fillStyle = grad;
-            vrCtx.beginPath();
-            vrCtx.arc(this.x, this.y, currentRadius, 0, Math.PI * 2);
-            vrCtx.fill();
-            
-            // Highlight specular dot
-            vrCtx.shadowBlur = 0;
-            vrCtx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-            vrCtx.beginPath();
-            vrCtx.ellipse(
-                this.x - currentRadius * 0.3, 
-                this.y - currentRadius * 0.3, 
-                currentRadius * 0.2, 
-                currentRadius * 0.1, 
-                -Math.PI / 4, 
-                0, 
-                Math.PI * 2
-            );
-            vrCtx.fill();
-            
-            // Glow trail line mapping to virtual floor
-            vrCtx.strokeStyle = this.color;
-            vrCtx.lineWidth = 0.5 * this.alpha;
-            vrCtx.beginPath();
-            vrCtx.moveTo(this.x, this.y);
-            vrCtx.lineTo(this.x, height);
-            vrCtx.stroke();
-        }
-    }
-    
-    function triggerNoteAction(noteNum, keyEl) {
-        if (keyEl) {
-            keyEl.classList.add('active');
-            setTimeout(() => keyEl.classList.remove('active'), 250);
-        }
-        
-        const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-        const noteName = noteNames[noteNum % 12];
-        
-        // Trigger HUD feedback
-        indicator.textContent = `NOTE IN: ${noteName}${Math.floor(noteNum / 12) - 1}`;
-        indicator.classList.add('active');
-        setTimeout(() => indicator.classList.remove('active'), 250);
-        
-        // Synthesize physical frequency: f = 440 * 2^((d - 69)/12)
-        const frequency = 440 * Math.pow(2, (noteNum - 69) / 12);
-        playMidiNoteTone(frequency);
-        
-        // Spawn VR particle
-        spawnedBubbles.push(new MidiVisualParticle(noteNum, noteName));
-        
-        // Also trigger background decorative bubble burst if user clicks on things
-        if (globalSpawnBurst) {
-            const rect = vrCanvas.getBoundingClientRect();
-            globalSpawnBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
-        }
-    }
-    
-    // Bind click events on piano keys
-    keys.forEach(key => {
-        key.addEventListener('mousedown', () => {
-            const noteNum = parseInt(key.getAttribute('data-note'));
-            triggerNoteAction(noteNum, key);
-        });
-    });
-    
-    // Bind computer keyboard letters to trigger matching keys
-    const keyMap = {
-        'a': { note: 60, el: document.querySelector('.piano-key[data-key="a"]') },
-        'w': { note: 61, el: document.querySelector('.piano-key[data-key="w"]') },
-        's': { note: 62, el: document.querySelector('.piano-key[data-key="s"]') },
-        'e': { note: 63, el: document.querySelector('.piano-key[data-key="e"]') },
-        'd': { note: 64, el: document.querySelector('.piano-key[data-key="d"]') },
-        'f': { note: 65, el: document.querySelector('.piano-key[data-key="f"]') },
-        't': { note: 66, el: document.querySelector('.piano-key[data-key="t"]') },
-        'g': { note: 67, el: document.querySelector('.piano-key[data-key="g"]') },
-        'y': { note: 68, el: document.querySelector('.piano-key[data-key="y"]') },
-        'h': { note: 68, el: document.querySelector('.piano-key[data-key="h"]') },
-        'u': { note: 69, el: document.querySelector('.piano-key[data-key="u"]') },
-        'j': { note: 71, el: document.querySelector('.piano-key[data-key="j"]') },
-        'k': { note: 72, el: document.querySelector('.piano-key[data-key="k"]') }
-    };
-    
-    window.addEventListener('keydown', (e) => {
-        // Only trigger if focus is not on contact form inputs
-        if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
-        
-        const map = keyMap[e.key.toLowerCase()];
-        if (map) {
-            triggerNoteAction(map.note, map.el);
-        }
-    });
-    
-    // Animation loop for VR perspective viewport
-    function drawVrSpace() {
-        requestAnimationFrame(drawVrSpace);
-        
-        // Radial starfield background
-        const grad = vrCtx.createRadialGradient(width/2, height/2, 5, width/2, height/2, width);
-        grad.addColorStop(0, '#091522');
-        grad.addColorStop(1, '#020509');
-        vrCtx.fillStyle = grad;
-        vrCtx.fillRect(0, 0, width, height);
-        
-        // Draw grid lines perspective to center
-        vrCtx.strokeStyle = 'rgba(0, 188, 255, 0.12)';
-        vrCtx.lineWidth = 1;
-        vrCtx.beginPath();
-        for (let i = 0; i <= 10; i++) {
-            const xOffset = (width / 10) * i;
-            vrCtx.moveTo(xOffset, height);
-            vrCtx.lineTo(width / 2, height / 2.5); // Perspective vanishing point
-        }
-        vrCtx.stroke();
-        
-        // Horizon line
-        vrCtx.strokeStyle = 'rgba(0, 242, 254, 0.2)';
-        vrCtx.beginPath();
-        vrCtx.moveTo(0, height / 2.5);
-        vrCtx.lineTo(width, height / 2.5);
-        vrCtx.stroke();
-        
-        // Update and draw active MIDI bubbles
-        for (let i = spawnedBubbles.length - 1; i >= 0; i--) {
-            const active = spawnedBubbles[i].update();
-            if (!active) {
-                spawnedBubbles.splice(i, 1);
-            } else {
-                spawnedBubbles[i].draw();
-            }
-        }
-    }
-    
-    drawVrSpace();
-}
-
-/* ==========================================================================
    CONTACT FORM VALIDATION & MODAL feedback
    ========================================================================== */
 function initContactForm() {
@@ -963,6 +339,13 @@ function initContactForm() {
         
         // Success Handler
         if (isValid) {
+            // Encode the email content
+            const subject = encodeURIComponent('New Message from Portfolio Website');
+            const body = encodeURIComponent(`Name: ${nameInput.value}\nEmail: ${emailInput.value}\n\nMessage:\n${msgInput.value}`);
+            
+            // Open default email client
+            window.location.href = `mailto:mpseidel@example.com?subject=${subject}&body=${body}`;
+
             // open glass Dialog modal
             modal.classList.add('open');
             modal.setAttribute('aria-hidden', 'false');
@@ -1017,12 +400,21 @@ function initLogonScreen() {
         return;
     }
 
-    logonForm.addEventListener('submit', (e) => {
+    logonForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const enteredPassword = passwordInput.value;
 
-        // Correct password check
-        if (enteredPassword === 'aero2026') {
+        // Hash the entered password securely on the client-side
+        const encoder = new TextEncoder();
+        const data = encoder.encode(enteredPassword);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+        // Compare against the pre-computed SHA-256 hash
+        const targetHash = '89ea2ef05542f2e9dfb45b2ac5459971e16f2018680e1181e92468293752080c';
+
+        if (hashHex === targetHash) {
             sessionStorage.setItem('portfolio_unlocked', 'true');
             logonScreen.classList.add('fade-out');
             
