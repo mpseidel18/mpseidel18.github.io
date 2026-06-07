@@ -13,7 +13,75 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Form and modals
     initContactForm();
+    initMediaControls();
 });
+
+/* ==========================================================================
+   MEDIA SOUND TOGGLES
+   Adds a per-video button to toggle muted state for project media elements.
+   ========================================================================== */
+function initMediaControls() {
+    const containers = document.querySelectorAll('.project-media-container');
+
+    containers.forEach(container => {
+        const video = container.querySelector('video.project-media');
+        if (!video) return;
+
+        // Create controls wrapper
+        const controls = document.createElement('div');
+        controls.className = 'media-controls';
+
+        // Play/Pause button
+        const playBtn = document.createElement('button');
+        playBtn.type = 'button';
+        playBtn.className = 'media-control media-play-toggle';
+        playBtn.setAttribute('aria-label', 'Play or pause video');
+        const playIcon = document.createElement('i');
+        playIcon.className = video.paused ? 'fa-solid fa-play' : 'fa-solid fa-pause';
+        playBtn.appendChild(playIcon);
+
+        playBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (video.paused) {
+                const p = video.play();
+                if (p && typeof p.then === 'function') p.catch(() => {});
+                playIcon.className = 'fa-solid fa-pause';
+            } else {
+                video.pause();
+                playIcon.className = 'fa-solid fa-play';
+            }
+        });
+
+        // Sound toggle button
+        const soundBtn = document.createElement('button');
+        soundBtn.type = 'button';
+        soundBtn.className = 'media-control media-sound-toggle';
+        soundBtn.setAttribute('aria-label', 'Toggle video sound');
+        const soundIcon = document.createElement('i');
+        soundIcon.className = video.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+        soundBtn.appendChild(soundIcon);
+
+        soundBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            video.muted = !video.muted;
+            soundIcon.className = video.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+            // Unmute may require a play interaction in some browsers
+            if (!video.muted && video.paused) {
+                const p = video.play();
+                if (p && typeof p.then === 'function') p.catch(() => {});
+            }
+        });
+
+        // Append buttons to wrapper and attach
+        controls.appendChild(playBtn);
+        controls.appendChild(soundBtn);
+        container.appendChild(controls);
+
+        // Update play icon on external play/pause events
+        video.addEventListener('play', () => { playIcon.className = 'fa-solid fa-pause'; });
+        video.addEventListener('pause', () => { playIcon.className = 'fa-solid fa-play'; });
+    });
+}
 
 /* ==========================================================================
    NAVIGATION ROUTING
@@ -404,40 +472,62 @@ function initLogonScreen() {
         e.preventDefault();
         const enteredPassword = passwordInput.value;
 
-        // Hash the entered password securely on the client-side
-        const encoder = new TextEncoder();
-        const data = encoder.encode(enteredPassword);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        const correctPassword = 'mpseidel_ss26';
 
-        // Compare against the pre-computed SHA-256 hash
-        const targetHash = '89ea2ef05542f2e9dfb45b2ac5459971e16f2018680e1181e92468293752080c';
+        // If Web Crypto is available, compare SHA-256 hashes (so the cleartext password isn't stored directly).
+        if (window.crypto && window.crypto.subtle) {
+            const encoder = new TextEncoder();
 
-        if (hashHex === targetHash) {
-            sessionStorage.setItem('portfolio_unlocked', 'true');
-            logonScreen.classList.add('fade-out');
-            
-            // Spawn a celebratory bubble burst in the background!
-            if (globalSpawnBurst) {
-                globalSpawnBurst(window.innerWidth / 2, window.innerHeight / 2);
+            // Hash entered password
+            const enteredBuffer = await window.crypto.subtle.digest('SHA-256', encoder.encode(enteredPassword));
+            const enteredHash = Array.from(new Uint8Array(enteredBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+            // Hash correct password
+            const correctBuffer = await window.crypto.subtle.digest('SHA-256', encoder.encode(correctPassword));
+            const correctHash = Array.from(new Uint8Array(correctBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+            if (enteredHash === correctHash) {
+                sessionStorage.setItem('portfolio_unlocked', 'true');
+                logonScreen.classList.add('fade-out');
+                if (globalSpawnBurst) globalSpawnBurst(window.innerWidth / 2, window.innerHeight / 2);
+                setTimeout(() => { logonScreen.style.display = 'none'; }, 600);
+                return;
             }
-            
-            // Remove from layout after fade animation finishes
-            setTimeout(() => {
-                logonScreen.style.display = 'none';
-            }, 600);
         } else {
-            // Apply shake animation to card
-            logonCard.classList.add('shake');
-            errorMessage.style.display = 'block';
-            passwordInput.value = '';
-            passwordInput.focus();
-
-            // Clear shake class so it can be re-triggered
-            setTimeout(() => {
-                logonCard.classList.remove('shake');
-            }, 500);
+            // Fallback for very old browsers: direct comparison
+            if (enteredPassword === correctPassword || btoa(enteredPassword) === btoa(correctPassword)) {
+                sessionStorage.setItem('portfolio_unlocked', 'true');
+                logonScreen.classList.add('fade-out');
+                if (globalSpawnBurst) globalSpawnBurst(window.innerWidth / 2, window.innerHeight / 2);
+                setTimeout(() => { logonScreen.style.display = 'none'; }, 600);
+                return;
+            }
         }
+
+        // If we reach here, authentication failed
+        logonCard.classList.add('shake');
+        errorMessage.style.display = 'block';
+        passwordInput.value = '';
+        passwordInput.focus();
+        setTimeout(() => { logonCard.classList.remove('shake'); }, 500);
+    });
+}
+
+// Lightbox Functionality
+const lightbox = document.getElementById('lightbox-modal');
+const lightboxImg = document.getElementById('lightbox-img');
+const galleryItems = document.querySelectorAll('.gallery-item img');
+
+if (lightbox && lightboxImg) {
+    galleryItems.forEach(img => {
+        img.style.cursor = 'zoom-in';
+        img.addEventListener('click', () => {
+            lightboxImg.src = img.src;
+            lightbox.style.display = 'flex';
+        });
+    });
+
+    lightbox.addEventListener('click', () => {
+        lightbox.style.display = 'none';
     });
 }

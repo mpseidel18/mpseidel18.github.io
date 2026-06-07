@@ -725,12 +725,14 @@ body {
 
 .tag {
     font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    background: rgba(255, 255, 255, 0.4);
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, var(--aero-blue), var(--aero-cyan));
     border: 1px solid rgba(255, 255, 255, 0.4);
-    padding: 3px 10px;
-    border-radius: 8px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 242, 254, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.4);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .download-btn {
@@ -1159,6 +1161,14 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.profile-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
 }
 
 .aero-avatar i {
@@ -1892,11 +1902,12 @@ body {
                 inset 0 1px 3px rgba(255, 255, 255, 0.1);
     overflow: hidden;
     position: relative;
-    aspect-ratio: 16 / 10;
+    /* Use natural video height to avoid large empty gaps */
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
+    padding: 8px;
 }
 
 .project-media-container::before {
@@ -1910,10 +1921,36 @@ body {
 
 .project-media {
     width: 100%;
-    height: 100%;
+    height: auto; /* let the video keep its aspect ratio */
+    max-height: 480px; /* avoid overly tall media containers */
     object-fit: cover;
     display: block;
     z-index: 1;
     background: #020617;
 }
+
+/* Sound toggle button for project media */
+.media-controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 6;
+    display: inline-flex;
+    gap: 8px;
+}
+
+.media-control {
+    background: rgba(0,0,0,0.45);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 6px 8px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+.media-control i { font-size: 1rem; }
+
 
