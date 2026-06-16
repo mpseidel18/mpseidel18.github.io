@@ -412,7 +412,7 @@ function initContactForm() {
             const body = encodeURIComponent(`Name: ${nameInput.value}\nEmail: ${emailInput.value}\n\nMessage:\n${msgInput.value}`);
 
             // Open default email client
-            window.location.href = `mailto:mpseidel@example.com?subject=${subject}&body=${body}`;
+            window.location.href = `mailto:mariuspseidel@gmail.com?subject=${subject}&body=${body}`;
 
             // open glass Dialog modal
             modal.classList.add('open');
