@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description"
-        content="Professional portfolio of Marius Seidel, Audio Software Developer and VR Engineer, specializing in JUCE Plugins and Unity VR experiences. Done in a premium modern Frutiger Aero design theme.">
+        content="Professional portfolio of Marius Seidel, Audio Software Developer and 3D Engineer, specializing in JUCE Plugins and Unity experiences.">
     <title>Marius Seidel | Creative Technologist</title>
 
     <!-- Google Fonts: Outfit (rounded and modern) & Syne (expressive headings) -->
@@ -83,8 +83,8 @@
         <section id="welcome" class="content-section active" aria-labelledby="welcome-title">
             <div class="welcome-hero">
                 <div class="hero-text">
-                    <span class="hero-eyebrow"><i class="fa-solid fa-wave-square"></i> CREATIVE TECHNOLOGIST</span>
-                    <h1 id="welcome-title" class="hero-title">Crafting the Future of Sound & Space</h1>
+                    <span class="hero-eyebrow"><i class="fa-solid fa-wave-square"></i> CREATIVE DEVELOPER</span>
+                    <h1 id="welcome-title" class="hero-title">Bridging Math and Art</h1>
                     <p class="hero-subtitle">I develop innovative audio and immersive technologies that bridge the gap
                         between creativity and engineering.</p>
                     <div class="hero-buttons">
@@ -113,8 +113,7 @@
                 <div class="project-card glass-card" id="card-vr-midi">
                     <div class="tech-tags" style="margin-bottom: 10px;">
                         <span class="tag">Generative Art</span>
-                        <span class="tag">Unity</span>
-                        <span class="tag">VR Experience </span>
+                        <span class="tag">Unity Project </span>
                     </div>
                     <h3 class="project-card-title">ColorPiano</h3>
                     <p class="project-card-desc">ColorPiano is a Unity application that turns MIDI input into visual
@@ -138,7 +137,7 @@
                         <h4
                             style="font-size: 0.95rem; margin-bottom: 10px; color: var(--aero-cyan); text-align: left; text-shadow: 0 0 10px rgba(0, 242, 254, 0.3);">
                             Generated from MIDI Sources</h4>
-                        <div class="project-gallery"
+                        <div class="project-gallery" id="midi-gallery"
                             style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; scroll-snap-type: x mandatory; -ms-overflow-style: none; scrollbar-width: none;">
                             <!-- Placeholder 1 -->
                             <div class="gallery-item"
@@ -158,22 +157,21 @@
                                     style="position: absolute; bottom: 8px; left: 8px; font-size: 0.75rem; background: rgba(15,23,42,0.8); padding: 3px 8px; border-radius: 12px; color: white; border: 1px solid rgba(255,255,255,0.1);">Ludwig
                                     van Beethoven - Moonlight Sonata 3d Movement</span>
                             </div>
-                            <!-- Placeholder 3 -->
-                            <div class="gallery-item"
-                                style="flex: 0 0 calc(60% - 5px); scroll-snap-align: center; position: relative; border-radius: 8px; overflow: hidden; border: 1px solid var(--glass-border-dark);">
-                                <img src="assets/placeholder_midi_3.png" alt="MIDI generation 3"
-                                    style="width: 100%; aspect-ratio: 16/9; object-fit: cover; background: rgba(255,255,255,0.05); display: block;">
-                                <span
-                                    style="position: absolute; bottom: 8px; left: 8px; font-size: 0.75rem; background: rgba(15,23,42,0.8); padding: 3px 8px; border-radius: 12px; color: white; border: 1px solid rgba(255,255,255,0.1);">electronic_beat.mid</span>
-                            </div>
-                            <!-- Placeholder 4 -->
-                            <div class="gallery-item"
-                                style="flex: 0 0 calc(60% - 5px); scroll-snap-align: center; position: relative; border-radius: 8px; overflow: hidden; border: 1px solid var(--glass-border-dark);">
-                                <img src="assets/placeholder_midi_4.png" alt="MIDI generation 4"
-                                    style="width: 100%; aspect-ratio: 16/9; object-fit: cover; background: rgba(255,255,255,0.05); display: block;">
-                                <span
-                                    style="position: absolute; bottom: 8px; left: 8px; font-size: 0.75rem; background: rgba(15,23,42,0.8); padding: 3px 8px; border-radius: 12px; color: white; border: 1px solid rgba(255,255,255,0.1);">new_track.mid</span>
-                            </div>
+                        </div>
+                        <div class="slider-controls"
+                            style="display: flex; justify-content: center; gap: 15px; margin-top: 15px;">
+                            <button class="nav-btn"
+                                onclick="document.getElementById('midi-gallery').scrollBy({left: -300, behavior: 'smooth'})"
+                                aria-label="Previous Screenshot"
+                                style="width: 40px; height: 40px; justify-content: center; padding: 0;">
+                                <i class="fa-solid fa-chevron-left"></i>
+                            </button>
+                            <button class="nav-btn"
+                                onclick="document.getElementById('midi-gallery').scrollBy({left: 300, behavior: 'smooth'})"
+                                aria-label="Next Screenshot"
+                                style="width: 40px; height: 40px; justify-content: center; padding: 0;">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </button>
                         </div>
                     </div>
 
@@ -200,33 +198,110 @@
                         <span class="tag">C++</span>
                         <span class="tag">JUCE</span>
                     </div>
-                    <h3 class="project-card-title">AeroSynth JUCE Plugin</h3>
-                    <p class="project-card-desc">A subtractive dual-oscillator synthesizer plugin written in C++ using
-                        the JUCE framework, designed with a custom hardware-accelerated Vector GUI skin.</p>
+                    <h3 class="project-card-title">JUCE Plugins</h3>
+                    <div style="margin-top: 10px;">
+                        <!-- RetroCrusher Section -->
+                        <div style="margin-bottom: 20px;">
+                            <h4
+                                style="font-size: 1.1rem; margin-bottom: 8px; color: var(--aero-cyan); text-shadow: 0 0 10px rgba(0, 242, 254, 0.3);">
+                                RetroCrusher</h4>
+                            <p class="project-card-desc" style="margin-bottom: 10px;">The "RetroCrusher" is a C++ audio
+                                plugin that deliberately degrades
+                                digital signal resolution through downsampling and bit reduction. It recreates the
+                                gritty lo-fi
+                                sound of early digital hardware while demonstrating a solid application of core DSP
+                                concepts.</p>
+                            <div style="display: flex; gap: 10px; width: 100%;">
+                                <a href="downloads/Bitcrusher_Project.zip" class="download-btn"
+                                    style="flex: 1; justify-content: center;" download>
+                                    <i class="fa-solid fa-code"></i> Download Project
+                                </a>
+                                <a href="downloads/Bitcrusher_Docs.pdf" class="download-btn"
+                                    style="flex: 1; justify-content: center; background: linear-gradient(180deg, var(--aero-cyan) 0%, rgba(0, 188, 255, 0.8) 100%);"
+                                    download>
+                                    <i class="fa-solid fa-file-pdf"></i> Documentation
+                                </a>
+                            </div>
+                        </div>
 
-                    <!-- Project Media Showcase -->
-                    <div class="project-media-container">
-                        <video class="project-media" controls poster="assets/juce_plugin_poster.png"
-                            aria-label="AeroSynth JUCE Synthesizer plugin showcase video">
-                            <source src="assets/juce_plugin_demo.mp4" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
+                        <!-- Vintage Tape Delay Section -->
+                        <div style="margin-bottom: 20px;">
+                            <h4
+                                style="font-size: 1.1rem; margin-bottom: 8px; color: var(--aero-cyan); text-shadow: 0 0 10px rgba(0, 242, 254, 0.3);">
+                                Vintage Tape Delay</h4>
+                            <p class="project-card-desc" style="margin-bottom: 10px;">The "Vintage Tape Delay" is a
+                                thread-safe echo plugin that uses smoothing algorithms to simulate
+                                the organic pitch fluctuations of analog tape machines. A mathematical saturation
+                                function gently
+                                tames audio peaks, providing warm harmonic distortion without digital clipping.</p>
+                            <div style="display: flex; gap: 10px; width: 100%;">
+                                <a href="downloads/TapeDelay_Project.zip" class="download-btn"
+                                    style="flex: 1; justify-content: center;" download>
+                                    <i class="fa-solid fa-code"></i> Download Project
+                                </a>
+                                <a href="downloads/TapeDelay_Docs.pdf" class="download-btn"
+                                    style="flex: 1; justify-content: center; background: linear-gradient(180deg, var(--aero-cyan) 0%, rgba(0, 188, 255, 0.8) 100%);"
+                                    download>
+                                    <i class="fa-solid fa-file-pdf"></i> Documentation
+                                </a>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Tech specs & Download -->
-                    <div class="project-footer" style="flex-direction: column; align-items: flex-start;">
-
-                        <div style="display: flex; gap: 10px; width: 100%;">
-                            <a href="downloads/JUCE_Plugin_Project.zip" class="download-btn"
-                                style="flex: 1; justify-content: center;" download>
-                                <i class="fa-solid fa-code"></i> Download Project
-                            </a>
-                            <a href="downloads/JUCE_Plugin_Docs.pdf" class="download-btn"
-                                style="flex: 1; justify-content: center; background: linear-gradient(180deg, var(--aero-cyan) 0%, rgba(0, 188, 255, 0.8) 100%);"
-                                download>
-                                <i class="fa-solid fa-file-pdf"></i> Documentation
-                            </a>
+                    <!-- Plugin Screenshots Gallery Placeholder -->
+                    <div class="project-gallery-container" style="margin: 15px 20px;">
+                        <h4
+                            style="font-size: 0.95rem; margin-bottom: 10px; color: var(--aero-cyan); text-align: left; text-shadow: 0 0 10px rgba(0, 242, 254, 0.3);">
+                            Plugin Screenshots</h4>
+                        <div class="project-gallery" id="juce-plugin-gallery"
+                            style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; scroll-snap-type: x mandatory; -ms-overflow-style: none; scrollbar-width: none;">
+                            <!-- Placeholder 1 -->
+                            <div class="gallery-item"
+                                style="flex: 0 0 calc(60% - 5px); scroll-snap-align: center; position: relative; border-radius: 8px; overflow: hidden; border: 1px solid var(--glass-border-dark);">
+                                <img src="assets/TapeDelay.png" alt="JUCE Plugin Screenshot 1"
+                                    style="width: 100%; aspect-ratio: 16/9; object-fit: cover; background: rgba(255,255,255,0.05); display: block;">
+                                <span
+                                    style="position: absolute; bottom: 8px; left: 8px; font-size: 0.75rem; background: rgba(15,23,42,0.8); padding: 3px 8px; border-radius: 12px; color: white; border: 1px solid rgba(255,255,255,0.1);">Plugin
+                                    Interface 1</span>
+                            </div>
+                            <!-- Placeholder 2 -->
+                            <div class="gallery-item"
+                                style="flex: 0 0 calc(60% - 5px); scroll-snap-align: center; position: relative; border-radius: 8px; overflow: hidden; border: 1px solid var(--glass-border-dark);">
+                                <img src="assets/Bitcrusher.png" alt="JUCE Plugin Screenshot 2"
+                                    style="width: 100%; aspect-ratio: 16/9; object-fit: cover; background: rgba(255,255,255,0.05); display: block;">
+                                <span
+                                    style="position: absolute; bottom: 8px; left: 8px; font-size: 0.75rem; background: rgba(15,23,42,0.8); padding: 3px 8px; border-radius: 12px; color: white; border: 1px solid rgba(255,255,255,0.1);">Plugin
+                                    Interface 2</span>
+                            </div>
                         </div>
+                        <div class="slider-controls"
+                            style="display: flex; justify-content: center; gap: 15px; margin-top: 15px;">
+                            <button class="nav-btn"
+                                onclick="document.getElementById('juce-plugin-gallery').scrollBy({left: -300, behavior: 'smooth'})"
+                                aria-label="Previous Screenshot"
+                                style="width: 40px; height: 40px; justify-content: center; padding: 0;">
+                                <i class="fa-solid fa-chevron-left"></i>
+                            </button>
+                            <button class="nav-btn"
+                                onclick="document.getElementById('juce-plugin-gallery').scrollBy({left: 300, behavior: 'smooth'})"
+                                aria-label="Next Screenshot"
+                                style="width: 40px; height: 40px; justify-content: center; padding: 0;">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Audio Demo -->
+                    <div class="project-audio-container" style="margin: 15px 20px;">
+                        <h4
+                            style="font-size: 0.95rem; margin-bottom: 10px; color: var(--aero-cyan); text-align: left; text-shadow: 0 0 10px rgba(0, 242, 254, 0.3);">
+                            Sound Demo
+                        </h4>
+                        <audio controls style="width: 100%; outline: none; border-radius: 8px;"
+                            aria-label="JUCE Plugin Audio Demo">
+                            <source src="assets\JuceDemonstration.mp3" type="audio/mpeg">
+                            Your browser does not support the audio element.
+                        </audio>
                     </div>
                 </div>
 
